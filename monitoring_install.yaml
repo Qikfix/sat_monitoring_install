@@ -35,7 +35,10 @@
 #   pcp-pmda-redis \
 #   pcp-system-tools \
 #   foreman-pcp
-   
+  
+# Adding all the required packages in this single call. This will avoid multiple
+# satellite-installer calls, which is a huge time consumption.
+
     - block:
 
         - name: Install the PCP packages using "satellite-maintain packages install"
@@ -45,7 +48,14 @@
                                    pcp-pmda-postgresql \
                                    pcp-pmda-redis \
                                    pcp-system-tools \
-                                   foreman-pcp
+                                   foreman-pcp \
+                                   grafana \
+                                   grafana-pcp \
+                                   cyrus-sasl-scram \
+                                   cyrus-sasl-lib \
+                                   pcp-pmda-bpftrace \
+                                   pcp-pmda-bcc
+
       
       when: ('pcp' not in ansible_facts['packages']) or
             ('pcp-pmda-apache' not in ansible_facts['packages']) or
@@ -53,7 +63,15 @@
             ('pcp-pmda-postgresql' not in ansible_facts['packages']) or
             ('pcp-pmda-redis' not in ansible_facts['packages']) or
             ('pcp-system-tools' not in ansible_facts['packages']) or
-            ('foreman-pcp' not in ansible_facts['packages'])
+            ('foreman-pcp' not in ansible_facts['packages']) or
+            ('grafana' not in ansible_facts['packages']) or
+            ('grafana-pcp' not in ansible_facts['packages']) or
+            ('cyrus-sasl-scram' not in ansible_facts['packages']) or
+            ('cyrus-sasl-lib' not in ansible_facts['packages']) or
+            ('pcp-pmda-bpftrace' not in ansible_facts['packages']) or
+            ('pcp-pmda-bcc' not in ansible_facts['packages'])
+
+            
 
 
 #   Enable and start the Performance Metrics Collector daemon and Performance Metrics Logger daemon: 

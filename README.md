@@ -13,7 +13,7 @@ By default, the user and password is admin, and after the first login, it will b
 
 On your Satellite Server, first, create a snapshot, after that, you should be ok to move on!
 ```
-wget https://raw.githubusercontent.com/waldirio/sat_monitoring_install/monitoring_install.yaml
+wget https://raw.githubusercontent.com/Qikfix/sat_monitoring_install/main/monitoring_install.yaml
 ansible-playbook monitoring_install.yaml
 ```
 

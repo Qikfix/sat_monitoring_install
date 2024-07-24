@@ -121,7 +121,7 @@
 # Adding here apache-mod and prometheus, in a single run, 
 # to reduce the execution time
 
-    - name: Enable the Apache HTTP Server extended status module
+    - name: Enable the Apache HTTP Server extended status module and Foreman Telemetry Prometheus
       ansible.builtin.shell: satellite-installer --enable-apache-mod-status --foreman-telemetry-prometheus-enabled true
    
 #   Enable the Apache HTTP Server PMDA: 

@@ -458,14 +458,23 @@
 # ---
 # Replace metrics by your user name.
 
-    - name: Edit the bpftrace.conf file and add the user that you have created
-      tags:
-        - check_here
+    - name: Edit the bpftrace.conf file (enabled option)
+      ansible.builtin.lineinfile:
+        path: /var/lib/pcp/pmdas/bpftrace/bpftrace.conf
+        regexp: '^enabled'
+        line: "enabled = true"
+ 
+    - name: Edit the bpftrace.conf file (auth_enable option)
+      ansible.builtin.lineinfile:
+        path: /var/lib/pcp/pmdas/bpftrace/bpftrace.conf
+        regexp: '^auth_enabled'
+        line: "auth_enabled = true"
+
+    - name: Edit the bpftrace.conf file (allowed_users option)
       ansible.builtin.lineinfile:
         path: /var/lib/pcp/pmdas/bpftrace/bpftrace.conf
         regexp: '^allowed_users'
         line: "allowed_users = root,metrics"
- 
 # 
 # Install bpftrace PMDA:
 # ---

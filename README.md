@@ -17,6 +17,16 @@ wget https://raw.githubusercontent.com/Qikfix/sat_monitoring_install/main/monito
 ansible-playbook monitoring_install.yaml
 ```
 
+Note that all the necessary setup will be done by the play, this includes the proper configuration of datasource, dashboard imports, and all the necessary settings, you just need to login with the `admin` account, using the `admin` password, and change in in the first login. After that, just access the dashboards available.
+
+## Some Pictures
+
+![alt text](pics/datasources.png)
+
+![alt text](pics/dashboards.png)
+
+![alt text](pics/redis_host_overview.png)
+
 I hope you enjoy it!
 
 Waldirio

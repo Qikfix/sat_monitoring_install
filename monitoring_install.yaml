@@ -118,8 +118,11 @@
 #   satellite-installer --enable-apache-mod-status
 #   ---
 
+# Adding here apache-mod and prometheus, in a single run, 
+# to reduce the execution time
+
     - name: Enable the Apache HTTP Server extended status module
-      ansible.builtin.shell: satellite-installer --enable-apache-mod-status
+      ansible.builtin.shell: satellite-installer --enable-apache-mod-status --foreman-telemetry-prometheus-enabled true
    
 #   Enable the Apache HTTP Server PMDA: 
 #   ---
@@ -144,8 +147,9 @@
 #   satellite-installer --foreman-telemetry-prometheus-enabled true
 #   ---
 
-    - name: Enable the telemetry feature in Satellite
-      ansible.builtin.shell: satellite-installer --foreman-telemetry-prometheus-enabled true
+# By Waldirio
+#    - name: Enable the telemetry feature in Satellite
+#      ansible.builtin.shell: satellite-installer --foreman-telemetry-prometheus-enabled true
 
 #   Configure PCP to collect data from Satellite:
 #   ---
@@ -206,14 +210,15 @@
 #   satellite-maintain packages install grafana grafana-pcp
 #   ---
 
-    - block:
-
-        - name: Install Grafana and the Grafana PCP plugin on your Satellite Server
-          ansible.builtin.command: satellite-maintain packages install -y grafana \
-                                   grafana-pcp
-      
-      when: ('grafana' not in ansible_facts['packages']) or
-            ('grafana-pcp' not in ansible_facts['packages'])
+# By Waldirio
+#    - block:
+#
+#        - name: Install Grafana and the Grafana PCP plugin on your Satellite Server
+#          ansible.builtin.command: satellite-maintain packages install -y grafana \
+#                                   grafana-pcp
+#      
+#      when: ('grafana' not in ansible_facts['packages']) or
+#            ('grafana-pcp' not in ansible_facts['packages'])
    
 #   Start and enable the Grafana web service and the PCP proxy service:
 #   ---
@@ -331,14 +336,15 @@
 # # yum install cyrus-sasl-scram cyrus-sasl-lib
 # ---
 
-    - block:
-
-        - name: Install the sasl framework for the scram-sha-256 authentication mechanism
-          ansible.builtin.command: satellite-maintain packages install -y cyrus-sasl-scram \
-                                   cyrus-sasl-lib
-      
-      when: ('cyrus-sasl-scram' not in ansible_facts['packages']) or
-            ('cyrus-sasl-lib' not in ansible_facts['packages'])
+# By Waldirio
+#    - block:
+#
+#        - name: Install the sasl framework for the scram-sha-256 authentication mechanism
+#          ansible.builtin.command: satellite-maintain packages install -y cyrus-sasl-scram \
+#                                   cyrus-sasl-lib
+#      
+#      when: ('cyrus-sasl-scram' not in ansible_facts['packages']) or
+#            ('cyrus-sasl-lib' not in ansible_facts['packages'])
  
  
 # Specify the supported authentication mechanism and the user database path in the pmcd.conf file:
@@ -440,12 +446,13 @@
 # # yum install pcp-pmda-bpftrace
 # ---
 
-    - block:
-
-        - name: Install the pcp-pmda-bpftrace package
-          ansible.builtin.command: satellite-maintain packages install -y pcp-pmda-bpftrace
-      
-      when: ('pcp-pmda-bpftrace' not in ansible_facts['packages'])
+# By Waldirio
+#    - block:
+#
+#        - name: Install the pcp-pmda-bpftrace package
+#          ansible.builtin.command: satellite-maintain packages install -y pcp-pmda-bpftrace
+#      
+#      when: ('pcp-pmda-bpftrace' not in ansible_facts['packages'])
 
 # Edit the bpftrace.conf file and add the user that you have created in the {setting-up-authentication-between-pcp-components}:
 # ---
@@ -494,12 +501,13 @@
 # # yum install pcp-pmda-bcc
 # ---
 
-    - block:
-
-        - name: Install the pcp-pmda-bcc package
-          ansible.builtin.command: satellite-maintain packages install -y pcp-pmda-bcc
-      
-      when: ('pcp-pmda-bcc' not in ansible_facts['packages'])
+# By Waldirio
+#    - block:
+#
+#        - name: Install the pcp-pmda-bcc package
+#          ansible.builtin.command: satellite-maintain packages install -y pcp-pmda-bcc
+#      
+#      when: ('pcp-pmda-bcc' not in ansible_facts['packages'])
 
 # Install the bcc PMDA:
 # ---

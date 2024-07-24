@@ -659,3 +659,59 @@
           content-type: application/json
 
 
+
+
+    - name: Ensure PCP Vector dashboard was imported
+      tags:
+        - dashboard
+      ansible.builtin.uri:
+        user: admin
+        password: admin
+        force_basic_auth: true
+        url: http://localhost:3000/api/dashboards/import
+        method: POST
+        body_format: json
+        body:
+          pluginId: performancecopilot-vector-datasource
+          path: dashboards/pcp-vector-host-overview.json
+          overwrite: false
+        headers:
+          content-type: application/json
+
+
+    - name: Ensure PCP Redis dashboard was imported
+      tags:
+        - dashboard
+      ansible.builtin.uri:
+        user: admin
+        password: admin
+        force_basic_auth: true
+        url: http://localhost:3000/api/dashboards/import
+        method: POST
+        body_format: json
+        body:
+          pluginId: performancecopilot-redis-datasource
+          path: dashboards/pcp-redis-host-overview.json
+          overwrite: false
+        headers:
+          content-type: application/json
+
+
+    - name: Ensure PCP Bpf dashboard was imported
+      tags:
+        - dashboard
+      ansible.builtin.uri:
+        user: admin
+        password: admin
+        force_basic_auth: true
+        url: http://localhost:3000/api/dashboards/import
+        method: POST
+        body_format: json
+        body:
+          pluginId: performancecopilot-bpftrace-datasource
+          path: dashboards/pcp-bpftrace-system-analysis.json
+          overwrite: false
+        headers:
+          content-type: application/json
+
+

@@ -298,4 +298,329 @@
 #   
 #   
 #   ## Access the Grafana web UI, enable the PCP plugin, and add PCP Redis as a data source
-#   
+#
+#
+
+
+# ## 10.8. Installing PCP bpftrace
+# 
+# ### 10.7. Setting up authentication between PCP components
+# 
+# Procedure
+# 
+# Install the sasl framework for the scram-sha-256 authentication mechanism:
+# ---
+# # yum install cyrus-sasl-scram cyrus-sasl-lib
+# ---
+
+    - block:
+
+        - name: Install the sasl framework for the scram-sha-256 authentication mechanism
+          ansible.builtin.command: satellite-maintain packages install -y cyrus-sasl-scram \
+                                   cyrus-sasl-lib
+      
+      when: ('cyrus-sasl-scram' not in ansible_facts['packages']) or
+            ('cyrus-sasl-lib' not in ansible_facts['packages'])
+ 
+ 
+# Specify the supported authentication mechanism and the user database path in the pmcd.conf file:
+# ---
+# # vi /etc/sasl2/pmcd.conf
+# 
+# mech_list: scram-sha-256
+# 
+# sasldb_path: /etc/pcp/passwd.db
+# ---
+
+    - name: Specify the supported authentication mechanism and the user database path in the pmcd.conf file
+      tags:
+        - check_here
+      ansible.builtin.lineinfile:
+        path: /etc/sasl2/pmcd.conf
+        regexp: '^mech_list'
+        line: "mech_list: scram-sha-256"
+ 
+# Create a new user:
+# ---
+# # useradd -r metrics
+# ---
+# Replace metrics by your user name.
+# 
+    - name: Create a new user
+      tags:
+        - check_here
+      ansible.builtin.user:
+        name: metrics
+        system: true
+
+# Add the created user in the user database:
+# ---
+# # saslpasswd2 -a pmcd metrics
+# 
+# Password:
+# Again (for verification):
+# ---
+# # echo 123 | saslpasswd2 -p -a pmcd wally
+
+    - name: Add the created user in the user database
+      tags:
+        - check_here
+      ansible.builtin.shell: echo Secret123 | saslpasswd2 -p -a pmcd metrics
+
+# To add the created user, you are required to enter the metrics account password.
+# 
+# Set the permissions of the user database:
+# ---
+# # chown root:pcp /etc/pcp/passwd.db
+# # chmod 640 /etc/pcp/passwd.db
+# ---
+
+    - name: Set the permissions of the user database
+      tags:
+        - check_here
+      ansible.builtin.file:
+        path: /etc/pcp/passwd.db
+        owner: root
+        group: pcp
+        mode: '0640'
+
+# Restart the pmcd service:
+# ---
+# # systemctl restart pmcd
+# ---
+#
+    - name: Restart the pmcd service
+      tags:
+        - check_here
+      loop:
+          - pmcd
+          - pmproxy
+      ansible.builtin.service:
+        name: "{{ item }}"
+        enabled: yes
+        state: restarted
+
+ 
+# Verification steps
+# 
+# Verify the sasl configuration:
+# ---
+# # pminfo -f -h "pcp://127.0.0.1?username=metrics" disk.dev.read
+# Password:
+# disk.dev.read
+# inst [0 or "sda"] value 19540
+# ---
+# 
+# 
+# 
+# ### 
+# 
+# Procedure
+# 
+# Install the pcp-pmda-bpftrace package:
+# ---
+# # yum install pcp-pmda-bpftrace
+# ---
+
+    - block:
+
+        - name: Install the pcp-pmda-bpftrace package
+          ansible.builtin.command: satellite-maintain packages install -y pcp-pmda-bpftrace
+      
+      when: ('pcp-pmda-bpftrace' not in ansible_facts['packages'])
+
+# Edit the bpftrace.conf file and add the user that you have created in the {setting-up-authentication-between-pcp-components}:
+# ---
+# # vi /var/lib/pcp/pmdas/bpftrace/bpftrace.conf
+# 
+# [dynamic_scripts]
+# enabled = true
+# auth_enabled = true
+# allowed_users = root,metrics
+# ---
+# Replace metrics by your user name.
+
+    - name: Edit the bpftrace.conf file and add the user that you have created
+      tags:
+        - check_here
+      ansible.builtin.lineinfile:
+        path: /var/lib/pcp/pmdas/bpftrace/bpftrace.conf
+        regexp: '^allowed_users'
+        line: "allowed_users = root,metrics"
+ 
+# 
+# Install bpftrace PMDA:
+# ---
+# # cd /var/lib/pcp/pmdas/bpftrace/
+# # ./Install
+# ---
+
+    - name: Install bpftrace PMDA
+      tags:
+        - check_here
+      ansible.builtin.shell: cd /var/lib/pcp/pmdas/bpftrace/ && ./Install
+
+# ### 
+# 
+# Install the pcp-pmda-bcc package:
+# ---
+# # yum install pcp-pmda-bcc
+# ---
+
+    - block:
+
+        - name: Install the pcp-pmda-bcc package
+          ansible.builtin.command: satellite-maintain packages install -y pcp-pmda-bcc
+      
+      when: ('pcp-pmda-bcc' not in ansible_facts['packages'])
+
+# Install the bcc PMDA:
+# ---
+# # cd /var/lib/pcp/pmdas/bcc
+# # ./Install
+# ---
+
+    - name: Install the bcc PMDA
+      tags:
+        - check_here
+      ansible.builtin.shell: cd /var/lib/pcp/pmdas/bcc && ./Install
+
+
+#  // Ensure performance copilot is installed
+#  ---
+#  grafana-cli plugins install performancecopilot-pcp-app
+#  systemctl restart grafana-server.service
+#  ---
+
+    - name: Ensure performance copilot is installed
+      ansible.builtin.shell: grafana-cli plugins install performancecopilot-pcp-app
+
+    - name: Restart the grafana service
+      loop:
+          - grafana-server.service
+      ansible.builtin.service:
+        name: "{{ item }}"
+        enabled: yes
+        state: restarted
+
+#  // To check
+#  ---
+#  # grafana-cli plugins ls
+#  installed plugins:
+#  performancecopilot-pcp-app @ 5.0.0
+#  Please restart Grafana after installing plugins. Refer to Grafana documentation for instructions if necessary.
+#  ---
+#  
+#  
+#  curl -u admin:admin 'http://localhost:3000/api/datasources' -X POST  -H 'content-type: application/json'  --data @pcp_redis.json
+#  
+#  @pcp_redis.json
+#  ---
+#  {
+#      "name": "PCP Redis",
+#      "type": "performancecopilot-redis-datasource",
+#      "access": "proxy",
+#      "url": "http://localhost:44322",
+#      "isDefault": true,
+#      "readOnly": false
+#  }
+#  ---
+
+    - name: Ensure PCP Redis datasource is enabled
+      tags:
+        - datasource
+      ansible.builtin.uri:
+        user: admin
+        password: admin
+        force_basic_auth: true
+        url: http://localhost:3000/api/datasources
+        method: POST
+        body_format: json
+        body:
+          name: "PCP Redis"
+          type: "performancecopilot-redis-datasource"
+          access: "proxy"
+          url: "http://localhost:44322"
+          isDefault: true
+          readOnly: false
+        headers:
+          content-type: application/json
+
+
+#  curl -u admin:admin 'http://localhost:3000/api/datasources' -X POST  -H 'content-type: application/json'  --data @pcp_vector.json
+#  
+#  @pcp_vector.json
+#  ---
+#  {
+#      "name": "PCP Vector",
+#      "type": "performancecopilot-vector-datasource",
+#      "access": "proxy",
+#      "url": "http://localhost:44322",
+#      "isDefault": true,
+#      "readOnly": false
+#  }
+#  ---
+#  
+#
+    - name: Ensure PCP Vector datasource is enabled
+      tags:
+        - datasource
+      ansible.builtin.uri:
+        user: admin
+        password: admin
+        force_basic_auth: true
+        url: http://localhost:3000/api/datasources
+        method: POST
+        body_format: json
+        body:
+          name: "PCP Vector"
+          type: "performancecopilot-vector-datasource"
+          access: "proxy"
+          url: "http://localhost:44322"
+          isDefault: true
+          readOnly: false
+        headers:
+          content-type: application/json
+
+#  
+#  curl -u admin:admin 'http://localhost:3000/api/datasources' -X POST  -H 'content-type: application/json'  --data @pcp_bpf.json
+#  
+#  @pcp_bpf.json
+#  ---
+#  {
+#      "name": "PCP bpftrace",
+#      "type": "performancecopilot-bpftrace-datasource",
+#      "access": "proxy",
+#      "url": "http://localhost:44322",
+#      "basicAuth": true,
+#      "isDefault": true,
+#      "readOnly": false,
+#      "basicAuthUser":"metrics",
+#      "secureJsonData":{"basicAuthPassword":"Secret123"}
+#  }
+#  ---
+
+    - name: Ensure PCP bpftrace datasource is enabled
+      tags:
+        - datasource
+      ansible.builtin.uri:
+        user: admin
+        password: admin
+        force_basic_auth: true
+        url: http://localhost:3000/api/datasources
+        method: POST
+        body_format: json
+        body:
+          name: "PCP bpftrace"
+          type: "performancecopilot-bpftrace-datasource"
+          access: "proxy"
+          url: "http://localhost:44322"
+          basicAuth: true
+          isDefault: true
+          readOnly: false
+          basicAuthUser: metrics
+          secureJsonData: {"basicAuthPassword":"Secret123"}
+        headers:
+          content-type: application/json
+
+
